@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <UsesDp9ikNative>true</UsesDp9ikNative>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dp9ik\Dp9ik.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,33 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dp9ik", "src\Dp9ik\Dp9ik.csproj", "{6359C9A6-5AFE-4B11-93D7-445A18FCBE18}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dp9ik.P9Auth", "src\Dp9ik.P9Auth\Dp9ik.P9Auth.csproj", "{770D07B7-019C-47A1-8C50-E8419085D53A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dp9ik.Tests", "tests\Dp9ik.Tests\Dp9ik.Tests.csproj", "{A9D3D0D0-9969-4287-93B3-4ED2A2FFCA2A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6359C9A6-5AFE-4B11-93D7-445A18FCBE18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6359C9A6-5AFE-4B11-93D7-445A18FCBE18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6359C9A6-5AFE-4B11-93D7-445A18FCBE18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6359C9A6-5AFE-4B11-93D7-445A18FCBE18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{770D07B7-019C-47A1-8C50-E8419085D53A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{770D07B7-019C-47A1-8C50-E8419085D53A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{770D07B7-019C-47A1-8C50-E8419085D53A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{770D07B7-019C-47A1-8C50-E8419085D53A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9D3D0D0-9969-4287-93B3-4ED2A2FFCA2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9D3D0D0-9969-4287-93B3-4ED2A2FFCA2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9D3D0D0-9969-4287-93B3-4ED2A2FFCA2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9D3D0D0-9969-4287-93B3-4ED2A2FFCA2A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,21 @@
+<Project>
+  <PropertyGroup>
+    <Dp9ikNativeRoot>$(MSBuildThisFileDirectory)native</Dp9ikNativeRoot>
+    <Dp9ikNativeToolName>dp9ik_native_tool</Dp9ikNativeToolName>
+    <Dp9ikNativeToolPath>$(Dp9ikNativeRoot)/$(Dp9ikNativeToolName)</Dp9ikNativeToolPath>
+  </PropertyGroup>
+
+  <Target Name="BuildDp9ikNative"
+          BeforeTargets="BeforeBuild"
+          Condition="'$(UsesDp9ikNative)' == 'true'">
+    <Exec Command='make -C "$(Dp9ikNativeRoot)" $(Dp9ikNativeToolName)' />
+  </Target>
+
+  <Target Name="CopyDp9ikNativeToOutput"
+          AfterTargets="Build"
+          Condition="'$(UsesDp9ikNative)' == 'true'">
+    <Copy SourceFiles="$(Dp9ikNativeToolPath)"
+          DestinationFolder="$(TargetDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+</Project>

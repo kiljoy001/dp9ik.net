@@ -1,0 +1,12 @@
+bin/
+obj/
+.vs/
+TestResults/
+StrykerOutput/
+
+*.user
+*.suo
+
+native/**/*.o
+native/**/*.a
+native/dp9ik_native_tool
