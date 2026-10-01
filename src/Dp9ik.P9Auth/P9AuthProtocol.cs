@@ -1,11 +1,23 @@
-using System.Security.Cryptography;
+using Org.BouncyCastle.Security;
 
 namespace Dp9ik.P9Auth;
 
+/// <summary>An authenticated dp9ik peer and the session secret both sides derived.</summary>
+/// <param name="User">The client user named in the ticket.</param>
+/// <param name="Secret">The 256-byte secret factotum gives tlssrv and tlsclient as their PSK.</param>
+public sealed record P9AuthResult(string User, byte[] Secret);
+
 public static class P9AuthProtocol
 {
+    private static readonly SecureRandom Random = new();
+
     public static async Task<string> HandshakeAsync(Stream stream, AuthServerConfig config, CancellationToken cancellationToken)
+        => (await AuthenticateAsync(stream, config, cancellationToken)).User;
+
+    /// <summary>Runs the server side of p9any/dp9ik and returns the client user and the session secret.</summary>
+    public static async Task<P9AuthResult> AuthenticateAsync(Stream stream, AuthServerConfig config, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(config);
         config.Validate();
 
         var key = AuthKey.FromPassword(config.Password);
@@ -13,10 +25,10 @@ public static class P9AuthProtocol
 
         await CStringEncoding.WriteAsync(stream, $"dp9ik@{config.Domain}", cancellationToken);
         var choice = await CStringEncoding.ReadAsync(stream, 4096, cancellationToken);
-        ValidateChoice(choice, config.Domain);
+        P9AuthSecurityPolicy.ValidateChoice(choice, config.Domain);
 
         var clientChallenge = await StreamExtensions.ReadExactlyAsync(stream, Dp9ikConstants.ChallengeLength, cancellationToken);
-        var serverChallenge = RandomNumberGenerator.GetBytes(Dp9ikConstants.ChallengeLength);
+        var serverChallenge = RandomBytes(Dp9ikConstants.ChallengeLength);
 
         var offer = BuildOffer(config, key, serverChallenge);
         await stream.WriteAsync(offer.Encoded, cancellationToken);
@@ -25,14 +37,14 @@ public static class P9AuthProtocol
         offer.State.Finish(key, authServerY);
 
         var proof = await ReadClientProofAsync(stream, key, cancellationToken);
-        ValidateProof(proof, serverChallenge);
+        P9AuthSecurityPolicy.ValidateProof(proof.Ticket, proof.Authenticator, serverChallenge);
 
-        var reply = BuildReply(proof.Ticket, clientChallenge);
+        string user = P9AuthSecurityPolicy.GetAuthenticatedUser(proof.Ticket);
+        var serverRandom = RandomBytes(Dp9ikConstants.NonceLength);
+        var reply = BuildReply(proof.Ticket, clientChallenge, serverRandom);
         await stream.WriteAsync(reply, cancellationToken);
 
-        return string.IsNullOrWhiteSpace(proof.Ticket.ClientUserText)
-            ? throw new InvalidOperationException("Authenticated user is empty.")
-            : proof.Ticket.ClientUserText;
+        return new P9AuthResult(user, SessionSecret.Derive(proof.Authenticator.Random, serverRandom, proof.Ticket.SessionKey));
     }
 
     private static (byte[] Encoded, AuthPakState State) BuildOffer(AuthServerConfig config, AuthKey key, byte[] serverChallenge)
@@ -49,12 +61,19 @@ public static class P9AuthProtocol
         return (encodedRequest.Concat(publicValue).ToArray(), state);
     }
 
-    private static byte[] BuildReply(Ticket ticket, byte[] clientChallenge)
+    private static byte[] BuildReply(Ticket ticket, byte[] clientChallenge, byte[] serverRandom)
     {
         var reply = new Authenticator(AuthMessageType.AuthAs);
         reply.SetChallenge(clientChallenge);
-        reply.SetRandom(RandomNumberGenerator.GetBytes(Dp9ikConstants.NonceLength));
+        reply.SetRandom(serverRandom);
         return reply.Marshal(ticket);
+    }
+
+    private static byte[] RandomBytes(int length)
+    {
+        var bytes = new byte[length];
+        Random.NextBytes(bytes);
+        return bytes;
     }
 
     private static async Task<(Ticket Ticket, Authenticator Authenticator)> ReadClientProofAsync(Stream stream, AuthKey key, CancellationToken cancellationToken)
@@ -65,59 +84,14 @@ public static class P9AuthProtocol
         return (ticket, authenticator);
     }
 
-    private static void ValidateChoice(string choice, string domain)
+    /// <summary>As factotum does for dp9ik, a form 0 (DES) ticket is refused rather than downgraded to.</summary>
+    private static Ticket ReadTicket(AuthKey key, byte[] buffer)
     {
-        if (!string.Equals(choice, $"dp9ik {domain}", StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException($"Unsupported auth choice '{choice}'.");
-        }
+        if (!Ticket.TryUnmarshal(key, buffer, out var ticket, out _)) throw new InvalidOperationException("Unable to decode the client ticket.");
+        return ticket!.Form == TicketEncryptionForm.Form1 ? ticket : throw new InvalidOperationException("dp9ik requires a form 1 ticket.");
     }
-
-    private static void ValidateProof((Ticket Ticket, Authenticator Authenticator) proof, byte[] serverChallenge)
-    {
-        EnsureTicketType(proof.Ticket);
-        EnsureAuthenticatorType(proof.Authenticator);
-        EnsureTicketChallenge(proof.Ticket, serverChallenge);
-        EnsureAuthenticatorChallenge(proof.Authenticator, serverChallenge);
-    }
-
-    private static Ticket ReadTicket(AuthKey key, byte[] buffer) => Ticket.TryUnmarshal(key, buffer, out var ticket, out _)
-        ? ticket!
-        : throw new InvalidOperationException("Unable to decode the client ticket.");
 
     private static Authenticator ReadAuthenticator(Ticket ticket, ReadOnlySpan<byte> buffer) => Authenticator.TryUnmarshal(ticket, buffer, out var authenticator, out _)
         ? authenticator!
         : throw new InvalidOperationException("Unable to decode the client authenticator.");
-
-    private static void EnsureAuthenticatorChallenge(Authenticator authenticator, byte[] serverChallenge)
-    {
-        if (!authenticator.Challenge.SequenceEqual(serverChallenge))
-        {
-            throw new InvalidOperationException("Authenticator challenge mismatch.");
-        }
-    }
-
-    private static void EnsureAuthenticatorType(Authenticator authenticator)
-    {
-        if (authenticator.Type != AuthMessageType.AuthAc)
-        {
-            throw new InvalidOperationException($"Unexpected authenticator type {authenticator.Type}.");
-        }
-    }
-
-    private static void EnsureTicketChallenge(Ticket ticket, byte[] serverChallenge)
-    {
-        if (!ticket.Challenge.SequenceEqual(serverChallenge))
-        {
-            throw new InvalidOperationException("Ticket challenge mismatch.");
-        }
-    }
-
-    private static void EnsureTicketType(Ticket ticket)
-    {
-        if (ticket.Type != AuthMessageType.AuthTs)
-        {
-            throw new InvalidOperationException($"Unexpected ticket type {ticket.Type}.");
-        }
-    }
 }

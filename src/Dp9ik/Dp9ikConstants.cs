@@ -4,6 +4,7 @@ public static class Dp9ikConstants
 {
     public const int NameLength = 28;
     public const int DomainLength = 48;
+    public const int PasswordLength = 28;
     public const int ChallengeLength = 8;
     public const int NonceLength = 32;
     public const int DesKeyLength = 7;

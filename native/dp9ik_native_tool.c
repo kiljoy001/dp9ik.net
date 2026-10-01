@@ -221,6 +221,7 @@ handle_authenticator_unmarshal(const char *ticket_hex, const char *wire_hex)
 	return 0;
 }
 
+#ifndef DP9IK_NATIVE_TOOL_NO_MAIN
 int
 main(int argc, char **argv)
 {
@@ -246,3 +247,4 @@ main(int argc, char **argv)
 		return handle_authenticator_unmarshal(argv[2], argv[3]);
 	return 1;
 }
+#endif

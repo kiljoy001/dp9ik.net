@@ -8,9 +8,8 @@ internal static class FixedField
 
     internal static string ReadText(byte[] value)
     {
-        var zeroIndex = Array.IndexOf(value, (byte)0);
-        var length = zeroIndex < 0 ? value.Length : zeroIndex;
-        return Encoding.UTF8.GetString(value, 0, length);
+        // Text fields always hold their C terminator: setters leave room for it and decoders force it.
+        return Encoding.UTF8.GetString(value, 0, Array.IndexOf(value, (byte)0));
     }
 
     internal static void SetExact(ReadOnlySpan<byte> value, byte[] target)
@@ -23,16 +22,19 @@ internal static class FixedField
         value.CopyTo(target);
     }
 
-    internal static void SetText(string value, byte[] target) => SetVariable(Encoding.UTF8.GetBytes(value), target);
-
-    internal static void SetVariable(ReadOnlySpan<byte> value, byte[] target)
+    /// <summary>Sets a NUL-terminated text field; its last byte is reserved for the terminator, as ANAMELEN and DOMLEN reserve it.</summary>
+    internal static void SetText(string value, byte[] target)
     {
-        if (value.Length > target.Length)
+        byte[] bytes = Encoding.UTF8.GetBytes(value);
+        if (bytes.Length >= target.Length)
         {
-            throw new ArgumentException($"Expected at most {target.Length} bytes.", nameof(value));
+            throw new ArgumentException($"Expected at most {target.Length - 1} bytes.", nameof(value));
         }
 
         target.AsSpan().Clear();
-        value.CopyTo(target);
+        bytes.CopyTo(target, 0);
     }
+
+    /// <summary>Forces the terminator a C decoder writes into the last byte of a received text field.</summary>
+    internal static void Terminate(byte[] target) => target[^1] = 0;
 }

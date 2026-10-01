@@ -69,6 +69,11 @@ public sealed class TicketRequest
         buffer.Slice(1 + Dp9ikConstants.NameLength + Dp9ikConstants.DomainLength, Dp9ikConstants.ChallengeLength).CopyTo(request.Challenge);
         buffer.Slice(1 + Dp9ikConstants.NameLength + Dp9ikConstants.DomainLength + Dp9ikConstants.ChallengeLength, Dp9ikConstants.NameLength).CopyTo(request.HostId);
         buffer.Slice(1 + (2 * Dp9ikConstants.NameLength) + Dp9ikConstants.DomainLength + Dp9ikConstants.ChallengeLength, Dp9ikConstants.NameLength).CopyTo(request.UserId);
+        // convM2TR terminates every text field.
+        FixedField.Terminate(request.AuthId);
+        FixedField.Terminate(request.AuthDomain);
+        FixedField.Terminate(request.HostId);
+        FixedField.Terminate(request.UserId);
         consumed = Dp9ikConstants.TicketRequestLength;
         return true;
     }
