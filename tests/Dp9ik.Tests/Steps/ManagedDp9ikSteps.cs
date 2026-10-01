@@ -388,7 +388,7 @@ public sealed class ManagedDp9ikSteps
     public async Task WhenFormZeroExchange()
     {
         using var listener = new TcpListener(IPAddress.Loopback, 0);
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        using var timeout = new CancellationTokenSource(TestTimeouts.Network);
         listener.Start();
         Task<P9AuthResult> server = Task.Run(async () =>
         {
@@ -442,7 +442,7 @@ public sealed class ManagedDp9ikSteps
     private async Task<(P9AuthResult Result, Dp9ikTestPeer.PeerResult Peer)> HandshakeAsync()
     {
         using var listener = new TcpListener(IPAddress.Loopback, 0);
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        using var timeout = new CancellationTokenSource(TestTimeouts.Network);
         listener.Start();
         Task<P9AuthResult> server = Task.Run(async () =>
         {

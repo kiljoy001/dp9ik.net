@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using Dp9ik.Tests.Support;
 using FluentAssertions;
 
 namespace Dp9ik.Tests;
@@ -184,7 +185,7 @@ public sealed class P9AuthHandshakeTests
         bool readReply = true)
     {
         using var listener = new TcpListener(IPAddress.Loopback, 0);
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        using var cts = new CancellationTokenSource(TestTimeouts.Network);
         listener.Start();
 
         var serverTask = RunServerAsync(listener, config, cts.Token);

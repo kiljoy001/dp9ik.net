@@ -26,7 +26,7 @@ public sealed class PskTransportSteps : IDisposable
         ["a certificate-based cipher suite"] = CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
     };
 
-    private readonly CancellationTokenSource timeout = new(TimeSpan.FromSeconds(2));
+    private readonly CancellationTokenSource timeout = new(TestTimeouts.Network);
     private readonly TcpListener listener = new(IPAddress.Loopback, 0);
     private readonly byte[] secret = RandomBytes(256);
     private Task<string>? server;
