@@ -16,8 +16,10 @@ public sealed class SmtSecurityInvariantTests
             "(or (= ticketType 64) (= ticketType 65) (= ticketType 68))");
         var concreteValues = EnumerateByteValues(value => AuthMessageClassifier.IsKnownTicketType((AuthMessageType)value));
 
-        symbolicValues.Should().BeEquivalentTo(concreteValues);
-        concreteValues.Should().BeEquivalentTo(new[]
+        // FluentAssertions compares byte sequences by position, and z3 enumerates models in a
+        // version-dependent order, so the sets are compared sorted.
+        symbolicValues.Order().Should().Equal(concreteValues.Order());
+        concreteValues.Order().Should().Equal(new[]
         {
             (byte)AuthMessageType.AuthTs,
             (byte)AuthMessageType.AuthTc,
@@ -33,8 +35,8 @@ public sealed class SmtSecurityInvariantTests
             "(or (= authenticatorType 66) (= authenticatorType 67))");
         var concreteValues = EnumerateByteValues(value => AuthMessageClassifier.IsKnownAuthenticatorType((AuthMessageType)value));
 
-        symbolicValues.Should().BeEquivalentTo(concreteValues);
-        concreteValues.Should().BeEquivalentTo(new[]
+        symbolicValues.Order().Should().Equal(concreteValues.Order());
+        concreteValues.Order().Should().Equal(new[]
         {
             (byte)AuthMessageType.AuthAs,
             (byte)AuthMessageType.AuthAc

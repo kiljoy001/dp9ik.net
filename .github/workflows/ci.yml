@@ -1,0 +1,34 @@
+# Builds, runs the full test suite and packs on every push and pull request; publishes nothing.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # The SMT invariant tests run the z3 solver.
+      - name: Install z3
+        run: sudo apt-get update && sudo apt-get install -y z3
+
+      # Builds the drawterm-derived reference tool and runs the differential tests.
+      - name: Test
+        run: dotnet test tests/Dp9ik.Tests -c Release
+
+      - name: Pack
+        run: |
+          for project in src/Dp9ik src/Dp9ik.P9Auth src/Dp9ik.Tls; do
+            dotnet pack "$project" -c Release -o artifacts -p:ContinuousIntegrationBuild=true
+          done
