@@ -6,6 +6,7 @@ public sealed class Ticket
     private const int Form0Length = 1 + Dp9ikConstants.ChallengeLength + (2 * Dp9ikConstants.NameLength) + Dp9ikConstants.DesKeyLength;
     private const int Form1PlainLength = 1 + Dp9ikConstants.ChallengeLength + (2 * Dp9ikConstants.NameLength) + Dp9ikConstants.NonceLength;
 
+    /// <summary>Creates an empty ticket of the given type and encryption form.</summary>
     public Ticket(AuthMessageType type, TicketEncryptionForm form)
     {
         Type = type;
@@ -16,20 +17,28 @@ public sealed class Ticket
         SessionKey = FixedField.Create(Dp9ikConstants.NonceLength);
     }
 
+    /// <summary>Gets the message type, AuthTs or AuthTc.</summary>
     public AuthMessageType Type { get; private set; }
 
+    /// <summary>Gets the encryption form.</summary>
     public TicketEncryptionForm Form { get; private set; }
 
+    /// <summary>Gets the 8-byte server challenge.</summary>
     public byte[] Challenge { get; }
 
+    /// <summary>Gets the NUL-terminated client user field.</summary>
     public byte[] ClientUser { get; }
 
+    /// <summary>Gets the NUL-terminated server user field.</summary>
     public byte[] ServerUser { get; }
 
+    /// <summary>Gets the session key: a 32-byte ticket key for form 1, a 7-byte DES key padded with zeros for form 0.</summary>
     public byte[] SessionKey { get; }
 
+    /// <summary>Gets the client user as text.</summary>
     public string ClientUserText => FixedField.ReadText(ClientUser);
 
+    /// <summary>Gets the server user as text.</summary>
     public string ServerUserText => FixedField.ReadText(ServerUser);
 
     /// <summary>convT2M: form 0 is Plan 9 DES under the DES key, form 1 is form1 under the PAK key.</summary>
@@ -46,12 +55,16 @@ public sealed class Ticket
         return Form1.Seal(plain, key.SharedKey);
     }
 
+    /// <summary>Sets the 8-byte challenge.</summary>
     public void SetChallenge(ReadOnlySpan<byte> value) => FixedField.SetExact(value, Challenge);
 
+    /// <summary>Sets the client user. Holds at most 27 bytes of UTF-8; longer names are refused.</summary>
     public void SetClientUser(string value) => FixedField.SetText(value, ClientUser);
 
+    /// <summary>Sets the server user. Holds at most 27 bytes of UTF-8; longer names are refused.</summary>
     public void SetServerUser(string value) => FixedField.SetText(value, ServerUser);
 
+    /// <summary>Sets the 32-byte session key.</summary>
     public void SetSessionKey(ReadOnlySpan<byte> value) => FixedField.SetExact(value, SessionKey);
 
     /// <summary>

@@ -7,10 +7,12 @@ namespace Dp9ik.P9Auth;
 /// <param name="Secret">The 256-byte secret factotum gives tlssrv and tlsclient as their PSK.</param>
 public sealed record P9AuthResult(string User, byte[] Secret);
 
+/// <summary>The server side of p9any negotiating dp9ik, as 9front factotum's p9any and dp9ik run it.</summary>
 public static class P9AuthProtocol
 {
     private static readonly SecureRandom Random = new();
 
+    /// <summary>Authenticates a client and returns its user.</summary>
     public static async Task<string> HandshakeAsync(Stream stream, AuthServerConfig config, CancellationToken cancellationToken)
         => (await AuthenticateAsync(stream, config, cancellationToken)).User;
 

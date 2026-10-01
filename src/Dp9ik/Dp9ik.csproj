@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <Description>Managed 9front dp9ik primitives: passtokey, AuthPAK (SPAKE2-EE over Ed448), form1 and form0 tickets and authenticators, and the session secret. Interoperable with 9front libauthsrv; no native code.</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>

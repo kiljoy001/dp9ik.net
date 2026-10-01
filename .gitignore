@@ -14,3 +14,4 @@ native/dp9ik_native_tool_san
 native/dp9ik_native_tool_fuzz
 # Reqnroll generates these from the .feature files at build time.
 tests/**/*.feature.cs
+artifacts/

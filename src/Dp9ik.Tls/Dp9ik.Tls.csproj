@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <Description>TLS 1.2 PSK keyed by the dp9ik session secret, as 9front tlssrv and tlsclient -a use it. Built on BouncyCastle; no OpenSSL.</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />

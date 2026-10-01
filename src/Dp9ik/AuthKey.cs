@@ -15,8 +15,10 @@ public sealed class AuthKey
 
     private AuthKey(byte[] raw) => _raw = raw;
 
+    /// <summary>Gets the 16-byte AES key passtokey derives.</summary>
     public byte[] AesKey => Slice(AesOffset, Dp9ikConstants.AesKeyLength);
 
+    /// <summary>Gets the 32-byte key the last finished AuthPAK exchange derived.</summary>
     public byte[] SharedKey => Slice(PakKeyOffset, Dp9ikConstants.PakKeyLength);
 
     internal byte[] DesKey => Slice(0, Dp9ikConstants.DesKeyLength);

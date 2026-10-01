@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <Description>Server side of the 9front p9any/dp9ik authentication exchange over a stream, returning the authenticated user and the session secret.</Description>
   </PropertyGroup>
 
   <ItemGroup>
