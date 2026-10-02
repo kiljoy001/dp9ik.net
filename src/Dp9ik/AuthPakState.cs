@@ -54,6 +54,6 @@ public sealed class AuthPakState
     private AuthPakCurve.Point Blinding(AuthKey key, bool ownPoint)
     {
         bool useFirst = _isClient == ownPoint;
-        return AuthPakCurve.Point.FromBigEndian(key.PakHash.Slice(useFirst ? 0 : Dp9ikConstants.PakPointLength, Dp9ikConstants.PakPointLength));
+        return AuthPakCurve.Point.FromBigEndian(key.PakHashSpan.Slice(useFirst ? 0 : Dp9ikConstants.PakPointLength, Dp9ikConstants.PakPointLength));
     }
 }

@@ -340,6 +340,10 @@ public sealed class ManagedDp9ikEdgeSteps
         ticket.ClientUser.AsSpan(Encoding.UTF8.GetByteCount(expected)).ToArray().Should().OnlyContain(value => value == 0);
     }
 
+    [When(@"^an Authkey is built from a (\d+)-byte DES key and a (\d+)-byte AES key$")]
+    public void WhenBuiltFromWrongSizes(int des, int aes)
+        => error = Catch(() => AuthKey.FromKeys(new byte[des], new byte[aes]));
+
     [When(@"^(the session secret|Plan 9 DES|an Authkey replace|a ticket challenge) is given (.+)$")]
     public void WhenGivenWrongLength(string operation, string input)
     {

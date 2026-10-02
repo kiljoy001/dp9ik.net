@@ -21,9 +21,27 @@ public sealed class AuthKey
     /// <summary>Gets the 32-byte key the last finished AuthPAK exchange derived.</summary>
     public byte[] SharedKey => Slice(PakKeyOffset, Dp9ikConstants.PakKeyLength);
 
-    internal byte[] DesKey => Slice(0, Dp9ikConstants.DesKeyLength);
+    /// <summary>Gets the 7-byte DES key passtokey derives.</summary>
+    public byte[] DesKey => Slice(0, Dp9ikConstants.DesKeyLength);
 
-    internal ReadOnlySpan<byte> PakHash => _raw.AsSpan(PakHashOffset, Dp9ikConstants.PakHashLength);
+    /// <summary>Gets the 448-byte AuthPAK hash: the PM and PN points <see cref="ApplyAuthPakHash"/> derives.</summary>
+    public byte[] PakHash => Slice(PakHashOffset, Dp9ikConstants.PakHashLength);
+
+    internal ReadOnlySpan<byte> PakHashSpan => _raw.AsSpan(PakHashOffset, Dp9ikConstants.PakHashLength);
+
+    /// <summary>
+    /// An Authkey from stored DES and AES keys, as keyfs holds them; apply
+    /// <see cref="ApplyAuthPakHash"/> to derive its PAK hash for a user.
+    /// </summary>
+    public static AuthKey FromKeys(ReadOnlySpan<byte> desKey, ReadOnlySpan<byte> aesKey)
+    {
+        if (desKey.Length != Dp9ikConstants.DesKeyLength) throw new ArgumentException("A DES key is 7 bytes.", nameof(desKey));
+        if (aesKey.Length != Dp9ikConstants.AesKeyLength) throw new ArgumentException("An AES key is 16 bytes.", nameof(aesKey));
+        var raw = new byte[Dp9ikConstants.AuthKeySize];
+        desKey.CopyTo(raw);
+        aesKey.CopyTo(raw.AsSpan(AesOffset));
+        return new AuthKey(raw);
+    }
 
     /// <summary>passtokey: passtodeskey and passtoaeskey over the password's UTF-8 bytes.</summary>
     public static AuthKey FromPassword(string password)

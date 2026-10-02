@@ -107,6 +107,28 @@ public sealed class ManagedDp9ikSteps
         }
     }
 
+    [When("the library builds each Authkey from the reference DES and AES keys and applies the AuthPAK hash")]
+    public static void WhenBuiltFromKeys()
+    {
+    }
+
+    [Then("its DES key, AES key and PAK hash equal the reference passtokey and authpak_hash")]
+    public void ThenBuiltFromKeysMatches()
+    {
+        for (int index = 0; index < passwords.Count; index++)
+        {
+            byte[] reference = Convert.FromHexString(
+                ReferenceTool.Run("authpak_hash", ReferenceTool.Run("passtokey", passwords[index])[0], users[index])[0]);
+            byte[] des = reference[..Dp9ikConstants.DesKeyLength];
+            byte[] aes = reference.AsSpan(Dp9ikConstants.DesKeyLength, Dp9ikConstants.AesKeyLength).ToArray();
+            AuthKey key = AuthKey.FromKeys(des, aes);
+            key.ApplyAuthPakHash(users[index]);
+            key.DesKey.Should().Equal(des);
+            key.AesKey.Should().Equal(aes);
+            key.PakHash.Should().Equal(reference[^Dp9ikConstants.PakHashLength..], $"user '{users[index]}'");
+        }
+    }
+
     [Given("a password and user shared by both sides")]
     public void GivenSharedPassword()
     {

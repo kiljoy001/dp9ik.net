@@ -17,6 +17,24 @@ Feature: dp9ik runs in managed code and matches 9front
     When the library derives its AES key
     Then it equals PBKDF2-HMAC-SHA1 with salt "Plan 9 key derivation", 9001 iterations and 16 bytes
 
+  @DP9IK_KEY_004 @property
+  Scenario: An Authkey built from stored DES and AES keys matches one from the password
+    Given generated passwords and user names
+    When the library builds each Authkey from the reference DES and AES keys and applies the AuthPAK hash
+    Then its DES key, AES key and PAK hash equal the reference passtokey and authpak_hash
+
+  @DP9IK_KEY_005
+  Scenario Outline: Stored keys must have their exact sizes
+    When an Authkey is built from a <des>-byte DES key and a <aes>-byte AES key
+    Then it fails with an argument error starting "<message>"
+
+    Examples:
+      | des | aes | message                   |
+      | 6   | 16  | A DES key is 7 bytes.     |
+      | 8   | 16  | A DES key is 7 bytes.     |
+      | 7   | 15  | An AES key is 16 bytes.   |
+      | 7   | 17  | An AES key is 16 bytes.   |
+
   @DP9IK_PAK_001 @property
   Scenario: The AuthPAK hash matches the reference
     Given generated passwords and user names
