@@ -39,6 +39,15 @@ public static class Dp9ikConstants
     public const int AuthenticatorSize = 41;
     /// <summary>The size of the native Authkey struct.</summary>
     public const int AuthKeySize = 503;
+    /// <summary>SECRETLEN: a secret field, including its terminator.</summary>
+    public const int SecretLength = 32;
+
+    /// <summary>The size of the native Passwordreq struct and its form 0 encoding.</summary>
+    public const int PasswordRequestSize = 90;
+
+    /// <summary>MAXPASSREQLEN: the longest marshalled password request.</summary>
+    public const int MaxPasswordRequestLength = 117;
+
     /// <summary>The size of the native PAKpriv struct.</summary>
     public const int AuthPakStateSize = 116;
 }

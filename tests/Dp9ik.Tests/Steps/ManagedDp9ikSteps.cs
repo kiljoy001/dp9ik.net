@@ -348,15 +348,19 @@ public sealed class ManagedDp9ikSteps
     {
     }
 
-    [Then("opening it fails")]
-    public void ThenOpeningFails()
+    [Then("it never opens as a form 1 ticket")]
+    public void ThenNeverOpensAsForm1()
     {
         for (int index = 0; index < sealedTicket!.Length; index++)
         {
             byte[] tampered = sealedTicket.ToArray();
             tampered[index] ^= (byte)(1 + (index % 255));
-            Ticket.TryUnmarshal(ticketKey!, tampered, out Ticket? opened, out _).Should().BeFalse($"byte {index} was changed");
-            opened.Should().BeNull();
+            // A changed signature makes convM2T read the bytes as a form 0 ticket, which by chance can
+            // decrypt to a ticket type, as in 9front; dp9ik servers refuse form 0 tickets.
+            if (Ticket.TryUnmarshal(ticketKey!, tampered, out Ticket? opened, out _))
+                opened!.Form.Should().Be(TicketEncryptionForm.Form0, $"byte {index} was changed");
+            else
+                opened.Should().BeNull();
         }
     }
 

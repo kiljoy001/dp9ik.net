@@ -11,6 +11,7 @@ public sealed class AuthKey
     private const int AesOffset = Dp9ikConstants.DesKeyLength;
     private const int PakKeyOffset = AesOffset + Dp9ikConstants.AesKeyLength;
     private const int PakHashOffset = PakKeyOffset + Dp9ikConstants.PakKeyLength;
+    private static readonly Org.BouncyCastle.Security.SecureRandom Random = new();
     private byte[] _raw;
 
     private AuthKey(byte[] raw) => _raw = raw;
@@ -40,6 +41,18 @@ public sealed class AuthKey
         var raw = new byte[Dp9ikConstants.AuthKeySize];
         desKey.CopyTo(raw);
         aesKey.CopyTo(raw.AsSpan(AesOffset));
+        return new AuthKey(raw);
+    }
+
+    /// <summary>
+    /// A key with random DES, AES and PAK keys, as authsrv's mkkey makes one up for an unknown or
+    /// refused id so that what it seals cannot be opened. Apply <see cref="ApplyAuthPakHash"/> before
+    /// using it in an AuthPAK exchange.
+    /// </summary>
+    public static AuthKey CreateRandom()
+    {
+        var raw = new byte[Dp9ikConstants.AuthKeySize];
+        Random.NextBytes(raw, 0, PakHashOffset);
         return new AuthKey(raw);
     }
 

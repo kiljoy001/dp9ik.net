@@ -48,6 +48,7 @@ handle_sizes(void)
 	printf("authenticator=%zu\n", sizeof(Authenticator));
 	printf("authkey=%zu\n", sizeof(Authkey));
 	printf("pakstate=%zu\n", sizeof(PAKpriv));
+	printf("passwordreq=%zu\n", sizeof(Passwordreq));
 	return 0;
 }
 
@@ -221,6 +222,55 @@ handle_authenticator_unmarshal(const char *ticket_hex, const char *wire_hex)
 	return 0;
 }
 
+static int
+handle_passwordreq_marshal(const char *ticket_hex, const char *request_hex)
+{
+	Ticket ticket;
+	Passwordreq request;
+	uchar buffer[MAXPASSREQLEN];
+	int size;
+
+	if(!decode_hex(ticket_hex, (unsigned char*)&ticket, sizeof(ticket)))
+		return 2;
+	if(!decode_hex(request_hex, (unsigned char*)&request, sizeof(request)))
+		return 2;
+
+	size = convPR2M(&request, (char*)buffer, sizeof(buffer), &ticket);
+	if(size <= 0)
+		return 3;
+
+	print_hex(buffer, (size_t)size);
+	return 0;
+}
+
+static int
+handle_passwordreq_unmarshal(const char *ticket_hex, const char *wire_hex)
+{
+	Ticket ticket;
+	Passwordreq request;
+	size_t wire_size;
+	uchar *wire;
+	int size;
+
+	wire_size = strlen(wire_hex) / 2;
+	wire = malloc(wire_size + 1);
+	if(wire == NULL)
+		return 4;
+	if(!decode_hex(ticket_hex, (unsigned char*)&ticket, sizeof(ticket))
+	|| !decode_hex(wire_hex, wire, wire_size)){
+		free(wire);
+		return 2;
+	}
+
+	memset(&request, 0, sizeof(request));
+	size = convM2PR((char*)wire, (int)wire_size, &request, &ticket);
+	free(wire);
+
+	printf("%d\n", size);
+	print_hex((unsigned char*)&request, sizeof(request));
+	return 0;
+}
+
 #ifndef DP9IK_NATIVE_TOOL_NO_MAIN
 int
 main(int argc, char **argv)
@@ -245,6 +295,10 @@ main(int argc, char **argv)
 		return handle_authenticator_marshal(argv[2], argv[3]);
 	if(strcmp(argv[1], "authenticator_unmarshal") == 0 && argc == 4)
 		return handle_authenticator_unmarshal(argv[2], argv[3]);
+	if(strcmp(argv[1], "passwordreq_marshal") == 0 && argc == 4)
+		return handle_passwordreq_marshal(argv[2], argv[3]);
+	if(strcmp(argv[1], "passwordreq_unmarshal") == 0 && argc == 4)
+		return handle_passwordreq_unmarshal(argv[2], argv[3]);
 	return 1;
 }
 #endif

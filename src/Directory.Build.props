@@ -2,7 +2,7 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
   <PropertyGroup>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>Scott J Guyton</Authors>
     <Copyright>Copyright (c) 2026 Scott J Guyton</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

@@ -35,6 +35,12 @@ Feature: dp9ik runs in managed code and matches 9front
       | 7   | 15  | An AES key is 16 bytes.   |
       | 7   | 17  | An AES key is 16 bytes.   |
 
+  @DP9IK_KEY_006
+  Scenario: A random Authkey has random DES, AES and PAK keys, as authsrv's mkkey makes them
+    When the library makes two random Authkeys
+    Then their DES, AES and PAK keys are 7, 16 and 32 bytes, not all zero, and differ between the two
+    And applying the AuthPAK hash for "glenda" gives the reference authpak_hash of a key with the same DES and AES keys
+
   @DP9IK_PAK_001 @property
   Scenario: The AuthPAK hash matches the reference
     Given generated passwords and user names
@@ -114,10 +120,10 @@ Feature: dp9ik runs in managed code and matches 9front
       | ticket  | reference | managed   |
 
   @DP9IK_FORM1_002 @property
-  Scenario: Any change to a sealed form1 message is rejected
+  Scenario: A changed form1 ticket never opens as a form 1 ticket
     Given a sealed ticket
     When any single byte of it is changed
-    Then opening it fails
+    Then it never opens as a form 1 ticket
 
   @DP9IK_FORM1_003
   Scenario: The form1 nonce is the signature and a little-endian counter
@@ -337,3 +343,72 @@ Feature: dp9ik runs in managed code and matches 9front
     Given a secret buffer holding non-zero bytes
     When it is released
     Then every byte of it is zero
+
+  @DP9IK_PR_001 @property
+  Scenario Outline: Password requests interoperate with the reference
+    Given a generated form <form> password request and its ticket
+    When the <sealer> seals the password request and the <opener> opens it
+    Then the opened password request equals the original
+
+    Examples:
+      | form | sealer    | opener    |
+      | 1    | managed   | reference |
+      | 1    | reference | managed   |
+      | 0    | managed   | reference |
+      | 0    | reference | managed   |
+
+  @DP9IK_PR_002
+  Scenario: A received password request has its fields terminated, as convM2PR does
+    Given the reference seals a form 1 password request whose passwords fill 28 bytes and secret fills 32
+    When the library and the reference open the password request
+    Then both read the passwords as their first 27 bytes and the secret as its first 31
+
+  @DP9IK_PR_003
+  Scenario: A sealed password request that was changed is refused
+    Given a sealed form 1 password request
+    Then changing any single byte of it makes opening fail
+
+  @DP9IK_PR_003
+  Scenario Outline: A password request cut short is refused
+    Given a sealed form <form> password request
+    Then opening one byte less than it fails and consumes nothing
+    And opening all of it consumes exactly its length
+
+    Examples:
+      | form |
+      | 0    |
+      | 1    |
+
+  @DP9IK_PR_006
+  Scenario Outline: The change-secret flag reaches the reference as written
+    Given a password request with change-secret <flag>
+    When the library seals it and the reference opens it
+    Then the reference reads change-secret <byte>
+
+    Examples:
+      | flag  | byte |
+      | false | 0    |
+      | true  | 1    |
+
+  @DP9IK_PR_004
+  Scenario Outline: Password request fields leave room for their terminators
+    When the password request's <field> is set to <length> bytes
+    Then the field is <outcome>
+
+    Examples:
+      | field        | length | outcome                                   |
+      | old password | 27     | accepted                                  |
+      | old password | 28     | refused with "Expected at most 27 bytes." |
+      | new password | 28     | refused with "Expected at most 27 bytes." |
+      | secret       | 31     | accepted                                  |
+      | secret       | 32     | refused with "Expected at most 31 bytes." |
+
+  @DP9IK_PR_005
+  Scenario Outline: Password requests check their ticket argument
+    When a password request is <operation> with a null ticket
+    Then the password request fails with an argument-null error for "ticket"
+
+    Examples:
+      | operation    |
+      | marshalled   |
+      | unmarshalled |
