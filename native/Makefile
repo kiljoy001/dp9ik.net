@@ -21,10 +21,13 @@ FUZZ_SRC = dp9ik_native_tool_fuzz.c
 AR ?= ar
 LIB_CFLAGS = $(CPPFLAGS) -fPIC -O2 -Wall
 
-# drawterm's libraries, minus sources needing OS services the tool never uses.
-LIBC_OBJS = $(patsubst %.c,%.o,$(wildcard drawterm/libc/*.c))
-LIBMP_OBJS = $(patsubst %.c,%.o,$(wildcard drawterm/libmp/*.c))
-LIBSEC_OBJS = $(patsubst %.c,%.o,$(filter-out drawterm/libsec/thumb.c,$(wildcard drawterm/libsec/*.c)))
+# drawterm's libraries, each of the files its own Makefile builds, and libauthsrv without the
+# two needing OS services the tool never uses.
+LIBC_UNBUILT = frand.c lnrand.c lrand.c nrand.c print.c rand.c runestrcat.c runestrcmp.c runestrcpy.c \
+	runestrdup.c runestrecpy.c runestrncat.c runestrncmp.c runestrncpy.c runestrrchr.c
+LIBC_OBJS = $(patsubst %.c,%.o,$(filter-out $(addprefix drawterm/libc/,$(LIBC_UNBUILT)),$(wildcard drawterm/libc/*.c)))
+LIBMP_OBJS = $(patsubst %.c,%.o,$(filter-out drawterm/libmp/crttest.c,$(wildcard drawterm/libmp/*.c)))
+LIBSEC_OBJS = $(patsubst %.c,%.o,$(filter-out $(addprefix drawterm/libsec/,aesCFB.c aesOFB.c aes_xts.c blowfish.c decodepem.c readcert.c thumb.c),$(wildcard drawterm/libsec/*.c)))
 LIBAUTHSRV_OBJS = $(patsubst %.c,%.o,$(filter-out drawterm/libauthsrv/authdial.c drawterm/libauthsrv/readnvram.c,$(wildcard drawterm/libauthsrv/*.c)))
 MACHDEP_OBJS = drawterm/posix-port/getcallerpc.o drawterm/posix-port/tas.o
 
