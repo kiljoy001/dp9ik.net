@@ -478,6 +478,21 @@ public sealed class ManagedDp9ikEdgeSteps
         return made;
     }
 
+    [Given(@"^a form (0|1) ticket cut to (\d+) bytes$")]
+    public void GivenCutTicket(int form, int bytes)
+    {
+        var made = new Ticket(AuthMessageType.AuthTs, (TicketEncryptionForm)form);
+        made.SetChallenge(Bytes(Dp9ikConstants.ChallengeLength));
+        made.SetSessionKey(Bytes(Dp9ikConstants.NonceLength));
+        wire = made.Marshal(AuthKey.CreateRandom())[..bytes];
+    }
+
+    [When("its length is measured without a key")]
+    public void WhenMeasured() => written = Ticket.MessageLength(wire);
+
+    [Then(@"^the length is (\d+)$")]
+    public void ThenLength(int length) => written.Should().Be(length);
+
     private byte[] Bytes(int length)
     {
         var bytes = new byte[length];

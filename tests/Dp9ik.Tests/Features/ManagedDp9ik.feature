@@ -412,3 +412,18 @@ Feature: dp9ik runs in managed code and matches 9front
       | operation    |
       | marshalled   |
       | unmarshalled |
+
+  @DP9IK_TICKET_LENGTH_001
+  Scenario Outline: A ticket is measured without its key, as convM2T measures one
+    Given a form <form> ticket cut to <bytes> bytes
+    When its length is measured without a key
+    Then the length is <length>
+
+    Examples:
+      | form | bytes | length |
+      | 1    | 0     | 8      |
+      | 1    | 7     | 8      |
+      | 0    | 8     | 72     |
+      | 1    | 8     | 124    |
+      | 0    | 72    | 72     |
+      | 1    | 124   | 124    |

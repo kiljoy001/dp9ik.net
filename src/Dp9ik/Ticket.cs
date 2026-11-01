@@ -101,6 +101,14 @@ public sealed class Ticket
         return true;
     }
 
+    /// <summary>
+    /// convM2T without a key: how long the ticket the buffer starts with is, 8 bytes until the
+    /// buffer holds the 8 that tell its form, and then form 1's length when they are a form 1
+    /// signature and form 0's when not. A ticket is read whole once the buffer holds that many.
+    /// </summary>
+    public static int MessageLength(ReadOnlySpan<byte> buffer)
+        => buffer.Length < 8 ? 8 : Form1.Check(buffer) is null ? Form0Length : Form1PlainLength - 1 + Form1.Overhead;
+
     /// <summary>The native Ticket struct: num, chal, cuid, suid, key[32], form.</summary>
     internal byte[] ToNativeLayout()
     {
