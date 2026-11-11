@@ -34,6 +34,7 @@ public sealed class PskTransportSteps : IDisposable
     private Exception? clientError;
     private string? clientReceived;
     private string? authenticatedUser;
+    private byte[]? reply;
     private readonly MemoryStream written = new();
 
     [Given("a PSK server keyed with a dp9ik session secret")]
@@ -62,6 +63,38 @@ public sealed class PskTransportSteps : IDisposable
         => offer == "TLS 1.3"
             ? ConnectProbeAsync(P9PskTls.Identity, secret, [CipherSuite.TLS_AES_128_GCM_SHA256], ProtocolVersion.TLSv13)
             : ConnectProbeAsync(P9PskTls.Identity, secret, [Suites[offer]], ProtocolVersion.TLSv12);
+
+    // The ClientHello drawterm sent on 2026-11-10: TLS 1.2, the suites 0xCCAB, 0x00AE and 0x008C,
+    // no compression, and the extensions supported_groups, ec_point_formats and
+    // signature_algorithms, with no renegotiation_info.
+    [When("a client sends drawterm's ClientHello, offering 9front's PSK suites and no renegotiation signal")]
+    public async Task WhenDrawtermHello()
+    {
+        var socket = new TcpClient();
+        await socket.ConnectAsync(IPAddress.Loopback, Port, timeout.Token);
+        NetworkStream stream = socket.GetStream();
+        await stream.WriteAsync(Convert.FromHexString(
+            "160303005b01000057030346e43a36ef7947a6063c36d64ddaa172268101a20938ec8b7f5860034153152e" +
+            "000006ccab00ae008c01000028000a00080006001d00170018000b00020100000d0012001006030503040302030601050104010201"), timeout.Token);
+        var header = new byte[5];
+        await stream.ReadExactlyAsync(header, timeout.Token);
+        var body = new byte[(header[3] << 8) | header[4]];
+        await stream.ReadExactlyAsync(body, timeout.Token);
+        reply = [.. header, .. body];
+        socket.Dispose();
+    }
+
+    // A handshake record whose first message is a ServerHello, and the suite it chose after the
+    // version, the random and the session id.
+    [Then(@"^the server answers with a ServerHello choosing (\S+)$")]
+    public void ThenServerHello(string suite)
+    {
+        reply![0].Should().Be(22);
+        reply[5].Should().Be(2);
+        int at = 5 + 4 + 2 + 32;
+        at += 1 + reply[at];
+        ((reply[at] << 8) | reply[at + 1]).Should().Be(Suites[suite]);
+    }
 
     [Then(@"^the handshake completes with (\S+)$")]
     public void ThenCompletes(string suite)

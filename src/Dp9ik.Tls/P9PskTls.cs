@@ -54,6 +54,14 @@ public static class P9PskTls
 
     private sealed class Server(TlsCrypto crypto, byte[] secret) : PskTlsServer(crypto, new IdentityManager(secret))
     {
+        /// <summary>
+        /// Takes a client that signals no secure renegotiation, as drawterm's libsec does not, as
+        /// 9front's tlshand.c takes one; neither ever renegotiates.
+        /// </summary>
+        public override void NotifySecureRenegotiation(bool secureRenegotiation)
+        {
+        }
+
         protected override int[] GetSupportedCipherSuites() => Suites();
 
         protected override ProtocolVersion[] GetSupportedVersions() => ProtocolVersion.TLSv12.Only();

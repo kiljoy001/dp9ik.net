@@ -43,6 +43,14 @@ Feature: The dp9ik session secret keys a TLS-PSK channel that 9front accepts
       | a certificate-based cipher suite            |
       | TLS_PSK_WITH_AES_256_GCM_SHA384            |
 
+  # drawterm's libsec offers neither TLS_EMPTY_RENEGOTIATION_INFO_SCSV nor renegotiation_info;
+  # 9front's tlshand.c answers it all the same.
+  @DP9IK_TLS_007
+  Scenario: A client that signals no secure renegotiation is answered
+    Given a PSK server keyed with a dp9ik session secret
+    When a client sends drawterm's ClientHello, offering 9front's PSK suites and no renegotiation signal
+    Then the server answers with a ServerHello choosing TLS_PSK_WITH_CHACHA20_POLY1305_SHA256
+
   @DP9IK_TLS_005
   Scenario: A dp9ik handshake followed by TLS-PSK carries data end to end
     Given a server that runs the dp9ik handshake and then TLS-PSK with its session secret
